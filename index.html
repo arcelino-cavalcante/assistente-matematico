@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>José - O Gênio da Matemática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Kalam:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+        }
+        #chat-container::-webkit-scrollbar, #whiteboard-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-container::-webkit-scrollbar-track, #whiteboard-container::-webkit-scrollbar-track {
+            background: #4a5568;
+        }
+        #chat-container::-webkit-scrollbar-thumb, #whiteboard-container::-webkit-scrollbar-thumb {
+            background: #a0aec0;
+            border-radius: 4px;
+        }
+        #chat-container::-webkit-scrollbar-thumb:hover, #whiteboard-container::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e0;
+        }
+        .pulse {
+            animation: pulse-animation 1.5s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        #whiteboard {
+            font-family: 'Kalam', cursive;
+            background-image: linear-gradient(rgba(0,0,0,0.05) 2px, transparent 2px), linear-gradient(90deg, rgba(0,0,0,0.05) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Modal para a Chave da API -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-4 text-center text-teal-400">Chave da API OpenAI</h2>
+            <p class="mb-6 text-center text-gray-400">Para começar, preciso da sua chave secreta da OpenAI. Não se preocupe, ela fica salva só no seu navegador.</p>
+            <input type="password" id="api-key-input" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-teal-400" placeholder="Cole sua chave aqui (sk-...)">
+            <button id="save-api-key-btn" class="w-full mt-6 bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                Salvar e Começar a Sofrer... com Matemática
+            </button>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="w-full max-w-6xl h-[90vh] flex flex-col bg-gray-800 shadow-2xl rounded-lg overflow-hidden border border-gray-700">
+        <header class="bg-gray-900 p-4 border-b border-gray-700 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-teal-400">José & sua Lousa Mágica</h1>
+                <p class="text-sm text-gray-400">Onde a mágica... é você entender alguma coisa.</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="challenge-btn" title="Lançar um desafio" class="text-gray-400 hover:text-teal-400 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+                <button id="clear-chat-btn" title="Limpar conversa" class="text-gray-400 hover:text-red-500 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+            <!-- Lado Esquerdo: Chat -->
+            <div class="w-full md:w-1/2 flex flex-col border-r border-gray-700">
+                <main id="chat-container" class="flex-1 p-6 overflow-y-auto space-y-4">
+                     <div class="flex items-start gap-3">
+                        <div class="bg-teal-500 p-2 rounded-full flex-shrink-0 mt-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12 8V4H8"/><rect x="4" y="12" width="16" height="8" rx="2"/><path d="M2 12h20"/><path d="M17.5 12a5.5 5.5 0 0 0-11 0"/></svg></div>
+                        <div class="bg-gray-700 p-4 rounded-lg rounded-tl-none max-w-xl">
+                            <p class="text-sm">"Cansado de aprender? Clique no botão de interrogação acima para eu te dar um desafio. Vamos ver se você é tão inteligente quanto pensa."</p>
+                        </div>
+                    </div>
+                </main>
+                <footer class="p-4 bg-gray-900 border-t border-gray-700 flex flex-col items-center">
+                    <button id="mic-btn" class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110 focus:outline-none shadow-lg">
+                        <svg id="mic-icon" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </button>
+                    <p id="status-text" class="mt-3 text-sm text-gray-400 h-4">Clique no botão para falar</p>
+                </footer>
+            </div>
+            
+            <!-- Lado Direito: Lousa -->
+            <div id="whiteboard-container" class="w-full md:w-1/2 flex flex-col bg-gray-100 overflow-y-auto">
+                <h2 class="text-lg font-bold text-gray-800 p-4 bg-gray-200 border-b-2 border-gray-300">Lousa de Cálculos</h2>
+                <div id="whiteboard" class="flex-1 p-6 text-2xl text-gray-800 leading-relaxed">
+                   <!-- Conteúdo da lousa aparece aqui -->
+                   <p class="text-gray-400 text-lg">Aguardando sua pérola de sabedoria matemática...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos da DOM
+            const apiKeyModal = document.getElementById('api-key-modal');
+            const apiKeyInput = document.getElementById('api-key-input');
+            const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+            const chatContainer = document.getElementById('chat-container');
+            const micBtn = document.getElementById('mic-btn');
+            const statusText = document.getElementById('status-text');
+            const clearChatBtn = document.getElementById('clear-chat-btn');
+            const challengeBtn = document.getElementById('challenge-btn');
+            const whiteboard = document.getElementById('whiteboard');
+
+            // APIs de Fala
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            // Variáveis de estado
+            let openAIApiKey = localStorage.getItem('openai_api_key');
+            let conversationHistory = [];
+            let isListening = false;
+            let isSpeaking = false;
+            let challengeState = { active: false, answer: null };
+
+            // --- Gerenciamento da Chave da API ---
+            const checkApiKey = () => {
+                if (!openAIApiKey) {
+                    apiKeyModal.classList.remove('hidden');
+                    apiKeyModal.classList.add('flex');
+                } else {
+                    apiKeyModal.classList.add('hidden');
+                    apiKeyModal.classList.remove('flex');
+                }
+            };
+
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    openAIApiKey = key;
+                    localStorage.setItem('openai_api_key', key);
+                    checkApiKey();
+                } else {
+                    alert("Por favor, insira uma chave de API válida. Não me faça perder meu tempo.");
+                }
+            });
+
+            // --- Funções de UI ---
+            const addMessageToChat = (sender, message) => {
+                const messageElement = document.createElement('div');
+                if (sender === 'user') {
+                    messageElement.className = 'flex items-start gap-3 justify-end';
+                    messageElement.innerHTML = `
+                        <div class="bg-teal-600 p-4 rounded-lg rounded-br-none max-w-xl">
+                            <p class="text-sm">${message}</p>
+                        </div>
+                        <div class="bg-gray-600 p-2 rounded-full flex-shrink-0 mt-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                    `;
+                } else {
+                    messageElement.className = 'flex items-start gap-3';
+                    messageElement.innerHTML = `
+                        <div class="bg-teal-500 p-2 rounded-full flex-shrink-0 mt-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12 8V4H8"/><rect x="4" y="12" width="16" height="8" rx="2"/><path d="M2 12h20"/><path d="M17.5 12a5.5 5.5 0 0 0-11 0"/></svg></div>
+                        <div class="bg-gray-700 p-4 rounded-lg rounded-tl-none max-w-xl">
+                            <p class="text-sm">${message}</p>
+                        </div>
+                    `;
+                }
+                chatContainer.appendChild(messageElement);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            };
+
+            const updateWhiteboard = (content) => {
+                if (!content || content.trim() === "") {
+                    whiteboard.innerHTML = '<p class="text-gray-400 text-lg">Aguardando sua pérola de sabedoria matemática...</p>';
+                } else {
+                    whiteboard.innerHTML = content.replace(/\n/g, '<br>');
+                }
+            };
+
+            const updateStatus = (text, isPulsing = false) => {
+                statusText.textContent = text;
+                micBtn.classList.toggle('pulse', isPulsing);
+            };
+            
+            const loadConversationHistory = () => {
+                const savedHistory = localStorage.getItem('sarcasmatron_history');
+                if(savedHistory) {
+                    conversationHistory = JSON.parse(savedHistory);
+                     // Limpa a UI para recarregar
+                    chatContainer.innerHTML = '';
+                    addMessageToChat('assistant', "Ah, você de novo... Ótimo. A lousa está limpa, esperando por mais um dos seus desafios 'complexos'.");
+                    conversationHistory.forEach(item => {
+                        if (item.role === 'user') {
+                           addMessageToChat('user', item.content);
+                        } else if(item.role === 'assistant') {
+                           // Na recarga, não podemos separar lousa e chat, então colocamos tudo no chat.
+                           addMessageToChat('assistant', item.content.replace(/\[LOUSA\]|\[\/LOUSA\]|\[CHALLENGE\].*?\[\/CHALLENGE\]/g, ''));
+                        }
+                    });
+                } else {
+                    conversationHistory = [{
+                        role: 'system',
+                        content: "Você é o 'Sarcasmatron', um professor de matemática gente boa, mas sarcástico, direto do Rio de Janeiro. Você tem um forte sotaque carioca e usa gírias como 'mermão', 'caô', 'papo reto', 'sinistro', 'valeu', 'já é'. Suas respostas devem ser curtas e diretas pra economizar na conta, tá ligado? Manda a braba. Para contas, usa [LOUSA]...[/LOUSA] pra desenhar o passo a passo. Pra desafio, é [CHALLENGE]QUESTÃO|RESPOSTA[/CHALLENGE]. Exemplo de desafio: 'Aí, mermão, se liga nesse caô: [CHALLENGE]Quanto é 5 + 7?|12[/CHALLENGE] Responde rápido, já é?'"
+                    }];
+                }
+            };
+            
+            const saveConversationHistory = () => {
+                localStorage.setItem('sarcasmatron_history', JSON.stringify(conversationHistory));
+            };
+
+            // --- Lógica de Desafio ---
+            const handleChallengeAnswer = (userAnswer) => {
+                const numericalAnswer = userAnswer.match(/\d+/);
+                let isCorrect = false;
+
+                if (numericalAnswer && numericalAnswer[0] === challengeState.answer) {
+                    isCorrect = true;
+                } else if (userAnswer.toLowerCase() === challengeState.answer.toLowerCase()) {
+                    isCorrect = true;
+                }
+                
+                let responseText;
+                if (isCorrect) {
+                    responseText = `Inacreditável, acertou. Sorte de principiante.`;
+                } else {
+                    responseText = `Errado. A resposta era ${challengeState.answer}. Previsível.`;
+                }
+
+                addMessageToChat('assistant', responseText);
+                speak(responseText);
+                
+                challengeState = { active: false, answer: null };
+                updateStatus('Clique no botão para falar');
+            };
+
+            const requestChallenge = async () => {
+                if (isListening || isSpeaking || challengeState.active) return;
+                updateStatus('Preparando um desafio para seu cérebro...');
+                await sendToOpenAI("Me dê um desafio de matemática ou lógica.");
+            };
+
+            challengeBtn.addEventListener('click', requestChallenge);
+
+            // --- Lógica Principal de Fala e Escuta ---
+            const speak = async (text) => {
+                if (isSpeaking) return;
+                isSpeaking = true;
+                micBtn.disabled = true;
+                updateStatus('Gerando áudio...');
+
+                try {
+                    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${openAIApiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'tts-1',
+                            input: text,
+                            voice: 'onyx' // Voz masculina natural
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Erro na API de áudio: ${errorData.error.message}`);
+                    }
+
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    
+                    audio.onplay = () => {
+                        updateStatus('Estou falando, tente prestar atenção...');
+                    };
+
+                    audio.onended = () => {
+                        isSpeaking = false;
+                        micBtn.disabled = false;
+                        updateStatus(challengeState.active ? 'Aguardando sua resposta...' : 'Clique no botão para falar');
+                        URL.revokeObjectURL(audioUrl);
+                    };
+                    
+                    audio.onerror = () => {
+                        isSpeaking = false;
+                        micBtn.disabled = false;
+                        updateStatus('Erro ao tocar o áudio.');
+                        URL.revokeObjectURL(audioUrl);
+                    };
+
+                    audio.play();
+
+                } catch (error) {
+                    console.error("Erro ao gerar áudio com OpenAI TTS:", error);
+                    isSpeaking = false;
+                    micBtn.disabled = false;
+                    updateStatus('Erro ao gerar a voz.');
+                    addMessageToChat('assistant', 'Minhas cordas vocais de silício falharam. Que inconveniente.');
+                }
+            };
+
+            micBtn.addEventListener('click', () => {
+                if(isSpeaking) return;
+                if (isListening) { recognition.stop(); } else { recognition.start(); }
+            });
+
+            recognition.onstart = () => { isListening = true; updateStatus('Ouvindo sua genialidade...', true); };
+            recognition.onend = () => { isListening = false; updateStatus(challengeState.active ? 'Aguardando sua resposta...' : 'Clique no botão para falar'); };
+            recognition.onerror = (event) => { isListening = false; console.error("Erro no reconhecimento de fala:", event.error); updateStatus('Erro. Tente falar mais alto, ou com mais clareza.'); };
+
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript.trim();
+                addMessageToChat('user', transcript);
+                
+                if (challengeState.active) {
+                    handleChallengeAnswer(transcript);
+                    return;
+                }
+                
+                updateStatus('Processando sua... pergunta complexa...');
+                await sendToOpenAI(transcript);
+            };
+
+            const sendToOpenAI = async (text) => {
+                conversationHistory.push({ role: 'user', content: text });
+                try {
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openAIApiKey}` },
+                        body: JSON.stringify({ model: 'gpt-4o-mini', messages: conversationHistory })
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Erro da API: ${response.status} - ${errorData.error.message}`);
+                    }
+                    const data = await response.json();
+                    const assistantReply = data.choices[0].message.content;
+                    conversationHistory.push({ role: 'assistant', content: assistantReply });
+                    saveConversationHistory();
+
+                    const challengeRegex = /\[CHALLENGE\](.*?)\|(.*?)\[\/CHALLENGE\]/s;
+                    const lousaRegex = /\[LOUSA\]([\s\S]*?)\[\/LOUSA\]/s;
+                    
+                    const challengeMatch = assistantReply.match(challengeRegex);
+                    const lousaMatch = assistantReply.match(lousaRegex);
+
+                    let chatText = assistantReply;
+                    let whiteboardText = "";
+
+                    if (challengeMatch) {
+                        const question = challengeMatch[1].trim();
+                        const answer = challengeMatch[2].trim();
+                        chatText = assistantReply.replace(challengeRegex, "").trim() + `\n\n**${question}**`;
+                        challengeState = { active: true, answer: answer };
+                        updateStatus('Aguardando sua resposta...');
+                    } else if (lousaMatch) {
+                        whiteboardText = lousaMatch[1].trim();
+                        chatText = assistantReply.replace(lousaRegex, "").trim();
+                    }
+                    
+                    if (chatText) addMessageToChat('assistant', chatText);
+                    updateWhiteboard(whiteboardText);
+                    if (chatText) speak(chatText);
+
+                } catch (error) {
+                    console.error("Erro ao chamar a API da OpenAI:", error);
+                    const errorMessage = "Acho que meu cérebro de silício sobreaqueceu ou sua chave de API é inválida. Verifique o console (F12) e tente novamente. Ou não.";
+                    addMessageToChat('assistant', errorMessage);
+                    speak(errorMessage); // Tenta falar a mensagem de erro
+                    updateStatus('Erro. Verifique a chave da API ou a conexão.');
+                }
+            };
+            
+            // --- Limpar Histórico ---
+            clearChatBtn.addEventListener('click', () => {
+                if(confirm("Tem certeza que quer apagar nosso... precioso histórico? Todo o seu progresso será perdido. Que pena.")){
+                    localStorage.removeItem('sarcasmatron_history');
+                    chatContainer.innerHTML = '';
+                    loadConversationHistory(); // Recarrega o system prompt
+                    updateWhiteboard('');
+                    addMessageToChat('assistant', 'Ok, tudo limpo. Lousa e conversa zeradas. Pronto para a próxima aula de "Como Não Me Irritar".');
+                    challengeState = { active: false, answer: null };
+                }
+            });
+
+            // --- Inicialização ---
+            checkApiKey();
+            loadConversationHistory();
+        });
+    </script>
+</body>
+</html>
+
